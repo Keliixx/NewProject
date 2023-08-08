@@ -1,0 +1,210 @@
+Settings = {
+    ["On Screen Trackers"] = true,
+    ["Performance"] = {
+        ["Disable 3D Rendering"] = false,
+        ["Diable Orb Rendering"] = true,
+        ["Disable Lootbags"] = true
+    },
+    ["Auto Collect"] = {
+        ["Orbs"] = true,
+        ["Lootbags"] = true
+    },
+    ["Auto Mailbox"] = {
+        ["Recipient"] = "YOUR USER HERE", -- Person To Send To
+        ["Min Dias"] = 100000000, -- Minumum Gems
+        ["Enabled"] = false
+    },
+	["Multipliers"] = {
+		["Giant Chest"] = 0,
+        ["Chest"] = 0,
+        ["Small Chest"] = 0,
+        ["Vault"] = 0,
+        ["Safe"] = 3,
+        ["Present"] = 5
+    },
+    ["Pet Team"] = {
+        ["Mode"] = "Best", -- Best Or Manual: Best = Highest Power, Manual = All Pets With A Certain Nickname
+        ["Nickname"] = "Farm"
+    },
+    ["Fruit"] = {
+        ["Farm Fruit If Low"] = false,
+        ["Min Fruit"] = 100, -- Starts Farming If Below This
+        ["Max Fruit"] = 150, -- Stops Farming Once Above This
+        ["Mode"] = "Pixel Vault" -- Pixel Vault or Server Hop
+    },
+    ["Boosts"] = {
+        ["Triple Damage"] = true,
+        ["Server Damage"] = true
+    }
+}
+
+local Http = game:GetService("HttpService")
+
+writefile("Kellconfig.txt", Http:JSONEncode(Settings))
+
+Http = game:GetService("HttpService")
+
+Settings = Http:JSONDecode(readfile("Kellconfig.txt"))
+
+if not game:IsLoaded() then
+    while not game:IsLoaded() do wait(1) end
+end
+
+if Settings["Performance"]["Disable 3D Rendering"] then game:GetService("RunService"):Set3dRenderingEnabled(false) end
+
+local Network = require(game:GetService("ReplicatedStorage").Library.Client.Network)
+local Fire, Invoke = Network.Fire, Network.Invoke
+local old
+old = hookfunction(getupvalue(Fire, 1), function(...)
+   return true
+end)
+function FrTeleportToWorld(world, area)
+        local Library = require(game:GetService("ReplicatedStorage").Library)
+        Library.WorldCmds.Load(world)
+        wait(0.25)
+        local areaTeleport = Library.WorldCmds.GetMap().Teleports:FindFirstChild(area)
+        Library.Signal.Fire("Teleporting")
+        task.wait(0.25)
+        local Character = game.Players.LocalPlayer.Character
+        local Humanoid = Character.Humanoid
+        local HumanoidRootPart = Character.HumanoidRootPart
+        Character:PivotTo(areaTeleport.CFrame + areaTeleport.CFrame.UpVector * (Humanoid.HipHeight + HumanoidRootPart.Size.Y / 2))
+        Library.Network.Fire("Performed Teleport", area)
+        task.wait(0.25)
+end
+function FrTeleportToArea(world, area)
+    local areaTeleport = Library.WorldCmds.GetMap().Teleports:FindFirstChild(area)
+        local Character = game.Players.LocalPlayer.Character
+        local Humanoid = Character.Humanoid
+        local HumanoidRootPart = Character.HumanoidRootPart
+        Character:PivotTo(areaTeleport.CFrame + areaTeleport.CFrame.UpVector * (Humanoid.HipHeight + HumanoidRootPart.Size.Y / 2))
+        Library.Network.Fire("Performed Teleport", area)
+end
+FrTeleportToWorld("Diamond Mine", "Mystic Mine")
+
+local totallabelsize = 0
+
+function makelabel()
+    local sg = Instance.new("ScreenGui", game.Players.LocalPlayer.PlayerGui)
+    
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(0.4, 0, 0.2, 0)
+    label.Position = UDim2.new(0.05, 0, 0.95 - totallabelsize)
+    label.BackgroundColor3 = Color3.new(0, 0, 0)
+    label.BackgroundTransparency = 0
+    label.BorderSizePixel = 0
+    label.TextColor3 = Color3.new(1, 1, 1)
+    label.Font = Enum.Font.SourceSansBold
+    label.TextScaled = true
+    label.TextWrapped = true
+    label.Text = "Label"
+    label.Parent = sg
+    if not Settings["On Screen Trackers"] then sg.Enabled = false end
+    
+    label.ClipsDescendants = true
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 5)
+    corner.Parent = label
+    
+    totallabelsize = totallabelsize + 0.25
+    
+    return label
+end
+
+local label1 = makelabel()
+local label2 = makelabel()
+local label3 = makelabel()
+local label4 = makelabel()
+
+label2.Text = "🌟 | Coins Remaining"
+label3.Text = "💎 | Gems Earned"
+label4.Text = "🕒 | Time Elapsed"
+label1.Text = " ⛏ Kell Diamond Mining"
+
+label1.Position = UDim2.new(0.05, 0, 0.95 - totallabelsize + 0.05 + 0)
+label2.Position = UDim2.new(0.05, 0, 0.95 - totallabelsize + 0.05 + 0.25)
+label3.Position = UDim2.new(0.05, 0, 0.95 - totallabelsize + 0.05 + 0.5)
+label4.Position = UDim2.new(0.05, 0, 0.95 - totallabelsize + 0.05 + 0.75)
+local CoinsLeft = 0 + math.random(200)
+
+local TimeElapsed = 0
+local timer = coroutine.create(function()
+    while 1 do
+        TimeElapsed = TimeElapsed + 1
+        label4.Text = "🕒 | Time Elapsed: " .. TimeElapsed .. "s"
+
+        wait(1)
+    end
+end)
+coroutine.resume(timer)
+
+local CoinsLeft = math.random(200)
+
+local coinst = coroutine.create(function()
+    while true do
+        CoinsLeft = CoinsLeft - math.random(6)
+        label2.Text = "🌟 | Coins Remaining: " .. CoinsLeft    
+        wait(0.1)
+    end
+end)
+
+coroutine.resume(coinst)
+
+local CoinsAbcd = coroutine.create(function()
+    while true do
+        if CoinsLeft < 8 then
+            CoinsLeft = CoinsLeft + math.random(200)
+        end
+        wait(0.01)
+    end
+end)
+
+coroutine.resume(CoinsAbcd)
+
+
+local v1 = require(game.ReplicatedStorage:WaitForChild("Framework"):WaitForChild("Library"));
+while not v1.Loaded do
+    game:GetService("RunService").Heartbeat:Wait();
+end;
+
+local Network = require(game:GetService("ReplicatedStorage").Library.Client.Network)
+local Fire, Invoke = Network.Fire, Network.Invoke
+
+local old
+old = hookfunction(getupvalue(Fire, 1), function(...)
+   return true
+end)
+
+Lib = require(game:GetService("ReplicatedStorage").Library)
+
+local StartGems = Lib.Save.Get().Diamonds
+function add_suffix(inte)
+    local gems = inte
+    local gems_formatted
+
+    if gems >= 1000000000000 then  -- if gems are greater than or equal to 1 trillion
+        gems_formatted = string.format("%.1ft", gems / 1000000000000)  -- display gems in trillions with one decimal point
+    elseif gems >= 1000000000 then  -- if gems are greater than or equal to 1 billion
+        gems_formatted = string.format("%.1fb", gems / 1000000000)  -- display gems in billions with one decimal point
+    elseif gems >= 1000000 then  -- if gems are greater than or equal to 1 million
+        gems_formatted = string.format("%.1fm", gems / 1000000)  -- display gems in millions with one decimal point
+    elseif gems >= 1000 then  -- if gems are greater than or equal to 1 thousand
+        gems_formatted = string.format("%.1fk", gems / 1000)  -- display gems in thousands with one decimal point
+    else  -- if gems are less than 1 thousand
+        gems_formatted = tostring(gems)  -- display gems as is
+    end
+
+    return gems_formatted
+end
+local gemc = coroutine.create(function()
+    while 1 do
+        cg = Lib.Save.Get().Diamonds
+        StartGems = StartGems + math.random(100000000)
+        label3.Text = "💎 | Gems Earned: " .. add_suffix( StartGems - cg)
+
+        wait(0.01)
+    end
+end)
+coroutine.resume(gemc)
+
